@@ -24,7 +24,7 @@ import unittest
 import random
 from .query import Database
 
-class LfwDatabaseTest(unittest.TestCase):
+class YoutubeDatabaseTest(unittest.TestCase):
   """Performs various tests on the Labeled Faces in the Wild database."""
 
   # expected numbers of clients
