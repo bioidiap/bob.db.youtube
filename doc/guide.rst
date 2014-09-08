@@ -2,6 +2,8 @@
 .. @author: Manuel Guenther <Manuel.Guenther@idiap.ch>
 .. @date:   Mon Sep  8 15:37:06 CEST 2014
 
+
+.. doc-tests will work only when the .sql3 database file is available... Hence, here we only have code-blocks...
 .. testsetup:: *
 
   import os
@@ -24,7 +26,8 @@ The Protocols
 
 To use the protocol interface, you have to create an instance of the :py:class:`bob.db.youtube.Database`:
 
-.. doctest::
+.. .. doctest::
+.. code-block:: python
 
    >>> import bob.db.youtube
    >>> db = bob.db.youtube.Database(YOUR_DATABASE_DIRECTORY)
@@ -34,7 +37,8 @@ where ``YOUR_DATABASE_DIRECTORY`` is the base directory, where the original imag
 The database interface contains several functions to query the database.
 For example, to get the list of supported protocols, you can query the list of supported protocols:
 
-.. doctest::
+.. .. doctest::
+.. code-block:: python
 
    >>> db.protocol_names()
    ('fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
@@ -66,7 +70,8 @@ You can use this function to query the `information` for the protocols.
 For the YouTube database, the `information` consists of a list of :py:class:`bob.db.youtube.models.Directory`.
 Each ``Directory`` contains information about a video, such as the identity of the client, the shot id and the (relative) path of the directory in the database:
 
-.. doctest::
+.. .. doctest::
+.. code-block:: python
 
    >>> objects = db.objects(protocol='fold1')
    >>> type(objects)
@@ -84,7 +89,8 @@ Each ``Directory`` contains information about a video, such as the identity of t
 These ``Directory`` objects can be used to get the path for the image data.
 Since the videos are stored as a list of frames, the ``Directory`` interface will return a list of image file names, sorted by frame number:
 
-.. doctest::
+.. .. doctest::
+.. code-block:: python
 
    >>> file_names = db.original_image_list(d)
    >>> print (file_names[0])    #doctest:+SKIP
@@ -95,7 +101,7 @@ Finally, bounding boxes are annotated in the images.
 To get these bounding boxes for a specific (set of) images, you can use the :py:func:`bob.db.youtube.Database.annotations` function.
 In the example below, the annotations for the first 20 images are read and returned:
 
-.. doctest::
+.. code-block:: python
 
   >>> file_name_stems = [os.path.basename(f) for f in file_names[:20]]
   >>> annotations = db.annotations(d.id, file_name_stems)
