@@ -529,8 +529,6 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
     query = self.query(Directory).filter(Directory.id == directory_id)
     assert query.count() == 1
     video = query.first()
-    if video.client is None:
-      print video.path
     annotation_file = os.path.join(self.original_directory, video.client.name + self.annotation_extension)
 
     annots = {}
@@ -554,14 +552,27 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
     return annots
 
 
-  def original_image_list(self, directory):
-    """Returns the list of original image names for the given ``Directory``."""
-    # get original filename expression for the database
-    file_name_filter = self.original_file_name(directory, check_existence = False)
+  def original_file_name(self, directory, check_existence = None):
+    """Returns the list of original image names for the given ``directory``, sorted by frame number.
+    In opposition to other bob databases, here a **list** of file names is returned.
+
+    Keyword arguments:
+
+    directory : :py:class:`bob.db.youtube.Directory`
+      The Directory object to retrieve the list of file names for
+
+    check_existence : bool
+      Shall the existence of the files be checked?
+    """
+
+    # get original filename expression for the directory
+    file_name_filter = bob.db.verification.utils.SQLiteDatabase.original_file_name(self, directory, check_existence = False)
 
     # list the data
     import glob
     file_name_list = glob.glob(file_name_filter)
+    if check_existence and not file_name_list:
+      raise ValueError("No image was found in directory '%s'. Please check the original directory '%s'." % (file_name_filter, self.original_directory))
     # get the file names sorted by id
     return sorted(file_name_list, key = lambda x: int(x.split('.')[-2]))
 

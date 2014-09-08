@@ -115,7 +115,6 @@ def annotations(args):
     output = null()
 
   a = db.annotations(args.id)
-#  k = sorted(a.keys(), cmp=lambda x,y : cmp(int(x.split('.')[1]), int(y.split('.')[1])))
   k = sorted(a.keys(), key=lambda x : int(x.split('.')[1]))
   for i in k:
     output.write("\n%s "%i)

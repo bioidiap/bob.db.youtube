@@ -92,9 +92,13 @@ Since the videos are stored as a list of frames, the ``Directory`` interface wil
 .. .. doctest::
 .. code-block:: python
 
-   >>> file_names = db.original_image_list(d)
+   >>> file_names = db.original_file_name(d)
    >>> print (file_names[0])    #doctest:+SKIP
    [...]/AJ_Cook/0/0.123.jpg
+
+.. warning::
+  Please note that -- in opposition to other bob.db database interfaces -- the ``original_file_name`` function returns a **list** of file names.
+  Likewise, ``original_file_names`` returns a list of lists of file names.
 
 
 Finally, bounding boxes are annotated in the images.

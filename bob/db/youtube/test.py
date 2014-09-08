@@ -219,20 +219,20 @@ def test_annotations():
   # Tests the unrestricted configuration
   db = bob.db.youtube.Database(original_directory = dir)
   # get all files
-  files = random.sample(list(db.objects()), 100) # if the random sampling fails, please remove it to get all files checked.
+  dirs = random.sample(list(db.objects()), 100) # if the random sampling fails, please remove it to get all files checked.
   # iterate over all files
-  for file in files:
+  for dir in dirs:
     # get the files
     import glob
-    images = glob.glob(db.original_file_name(file, check_existence = False))
+    images = db.original_file_name(dir)
     # get the annotations for 10 images
-    annotations = db.annotations(file.id)
+    annotations = db.annotations(dir.id)
     # check that images and annotations are from the same image ID
     assert len(images) == len(annotations)
 
     # check a subset of the annotations
     image_names = sorted(set([os.path.basename(images[random.randrange(len(images))]) for i in range(10)]))
-    annotations = db.annotations(file.id, image_names = image_names)
+    annotations = db.annotations(dir.id, image_names = image_names)
     assert len(annotations) <= 10
     for i, image_id in enumerate(sorted(annotations.keys())):
       assert image_id == image_names[i]
