@@ -22,7 +22,7 @@
 
 import os
 import sys
-from bob.db.driver import Interface as BaseInterface
+from bob.db.base.driver import Interface as BaseInterface
 
 # Driver API
 # ==========
@@ -41,7 +41,7 @@ def dumplist(args):
 
   output = sys.stdout
   if args.selftest:
-    from bob.db.utils import null
+    from bob.db.base.utils import null
     output = null()
 
   for f in r:
@@ -63,11 +63,11 @@ def dumppairs(args):
 
   output = sys.stdout
   if args.selftest:
-    from bob.db.utils import null
+    from bob.db.base.utils import null
     output = null()
 
   for p in r:
-    output.write('%s -> %s\n' % (p.enrol_file.make_path(args.directory, args.extension), p.probe_file.make_path(args.directory, args.extension)))
+    output.write('%s -> %s\n' % (p.enroll_directory.make_path(args.directory, args.extension), p.probe_directory.make_path(args.directory, args.extension)))
 
   return 0
 
@@ -92,7 +92,7 @@ def checkfiles(args):
   # report
   output = sys.stdout
   if args.selftest:
-    from bob.db.utils import null
+    from bob.db.base.utils import null
     output = null()
 
   if bad:
@@ -107,16 +107,20 @@ def annotations(args):
   """Returns a list of file database identifiers given the path stems"""
 
   from .query import Database
-  db = Database(args.annotation_type)
+  db = Database(args.directory)
 
   output = sys.stdout
   if args.selftest:
-    from bob.db.utils import null
+    from bob.db.base.utils import null
     output = null()
 
   a = db.annotations(args.id)
-  for f in a: output.write('%s : (%3.2f, %3.2f)\n' % (f, a[f][0], a[f][1]))
-
+#  k = sorted(a.keys(), cmp=lambda x,y : cmp(int(x.split('.')[1]), int(y.split('.')[1])))
+  k = sorted(a.keys(), key=lambda x : int(x.split('.')[1]))
+  for i in k:
+    output.write("\n%s "%i)
+    for f in a[i]: output.write('%s : (%3.2f, %3.2f) ' % (f, a[i][f][0], a[i][f][1]))
+  output.write("\n")
   if not a: return 1
 
   return 0
@@ -129,7 +133,7 @@ def reverse(args):
 
   output = sys.stdout
   if args.selftest:
-    from bob.db.utils import null
+    from bob.db.base.utils import null
     output = null()
 
   r = db.reverse(args.path)
@@ -147,7 +151,7 @@ def path(args):
 
   output = sys.stdout
   if args.selftest:
-    from bob.db.utils import null
+    from bob.db.base.utils import null
     output = null()
 
   r = db.paths(args.id, prefix=args.directory, suffix=args.extension)
@@ -166,7 +170,7 @@ class Interface(BaseInterface):
 
   def version(self):
     import pkg_resources  # part of setuptools
-    return pkg_resources.require('xbob.db.%s' % self.name())[0].version
+    return pkg_resources.require('bob.db.%s' % self.name())[0].version
 
   def files(self):
 
@@ -196,7 +200,7 @@ class Interface(BaseInterface):
     parser = subparsers.add_parser('dumplist', help=dumplist.__doc__)
     parser.add_argument('-d', '--directory', help="if given, this path will be prepended to every entry returned.")
     parser.add_argument('-e', '--extension', help="if given, this extension will be appended to every entry returned.")
-    parser.add_argument('-p', '--protocol', default='view1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
+    parser.add_argument('-p', '--protocol', default='fold1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
     parser.add_argument('-g', '--group', help="if given, limits the dump to a particular group of the data.", choices=db.m_valid_groups)
     parser.add_argument('-u', '--purpose', help="if given, limits the dump to a particular purpose.", choices=db.m_valid_purposes)
     parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
@@ -206,7 +210,7 @@ class Interface(BaseInterface):
     parser = subparsers.add_parser('dumppairs', help=dumplist.__doc__)
     parser.add_argument('-d', '--directory', help="if given, this path will be prepended to every entry returned.")
     parser.add_argument('-e', '--extension', help="if given, this extension will be appended to every entry returned.")
-    parser.add_argument('-p', '--protocol', default='view1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
+    parser.add_argument('-p', '--protocol', default='fold1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
     parser.add_argument('-g', '--group', help="if given, limits the dump to a particular group of the data.", choices=db.m_valid_groups)
     parser.add_argument('-c', '--class', dest='sclass', help="if given, limits the dump to a particular class of pairs.", choices=db.m_valid_classes)
     parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
@@ -222,7 +226,7 @@ class Interface(BaseInterface):
     # adds the "annotations" command
     parser = subparsers.add_parser('annotations', help=reverse.__doc__)
     parser.add_argument('id', type=int, help="The File id for which to retrieve the annotations.")
-    parser.add_argument('-a', '--annotation-type', choices=('idiap', 'funneled'), default='funneled', help='Choose, which kind of annotations should be retrieved.')
+    parser.add_argument('-d', '--directory', required=True, help="The directory, where the original data can be found.")
     parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
     parser.set_defaults(func=annotations) #action
 
@@ -235,7 +239,7 @@ class Interface(BaseInterface):
     # adds the "path" command
     parser = subparsers.add_parser('path', help=path.__doc__)
     parser.add_argument('-d', '--directory', default='', help="if given, this path will be prepended to every entry returned.")
-    parser.add_argument('-e', '--extension', default='', help="if given, this extension will be appended to every entry returned.")
+    parser.add_argument('-e', '--extension', default='/*.jpg', help="if given, this extension will be appended to every entry returned.")
     parser.add_argument('id', nargs='+', type=int, help="one or more file ids to look up. If you provide more than one, files which cannot be found will be omitted from the output. If you provide a single id to lookup, an error message will be printed if the id does not exist in the database. The exit status will be non-zero in such case.")
     parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
     parser.set_defaults(func=path) #action

@@ -1,9 +1,9 @@
 .. vim: set fileencoding=utf-8 :
 .. Andre Anjos <andre.anjos@idiap.ch>
-.. Mon 13 Aug 2012 12:36:40 CEST 
+.. Mon 13 Aug 2012 12:36:40 CEST
 
-====================================
- Labeled Faces in the Wild Database
-====================================
+============
+ Python API
+============
 
-.. automodule:: xbob.db.lfw
+.. automodule:: bob.db.youtube

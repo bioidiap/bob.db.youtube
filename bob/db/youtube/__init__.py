@@ -17,24 +17,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""The Labeled Faces in the Wild (LFW) face database. Please refer to
-http://vis-www.cs.umass.edu/lfw for information how to get a copy of it.
+"""The YouTube Faces database protocol interface. Please refer to http://www.cs.tau.ac.il/~wolf/ytfaces for information how to get a copy of the original data.
 
-The LFW database provides two different sets (called "views". The first one, called "view1"
-is to be used for optimizing meta-parameters of your algorithm.
-When querying the database, please use ``protocol='view1'`` to get the data only for this view.
-Please note that in ``view1`` there is only a ``'dev'`` group, but no ``'eval'``.
+.. note::
+  There has been errata data published for the database.
+  These errata is **not** considered in the protocols (yet).
 
-The second view is split up into 10 different "folds". According to http://vis-www.cs.umass.edu/lfw
-in each fold 9/10 of the database are used for training, and one for evaluation.
-In **this implementation** of the LFW database, up to 7/10 of the data is used for training (``groups='world'``),
+The YouTube database consists of 10 different splits, which are called "fold" here (to be consistent with the LFW database).
+In each fold 9/10 of the database are used for training, and one for evaluation.
+In **this implementation** of the YouTube protocols, up to 7/10 of the data is used for training (``groups='world'``),
 2/10 are used for development (to estimate a threshold; ``groups='dev'``) and the last 1/10 is finally used to evaluate the system (``groups='eval'``).
 
 To compute recognition results, please execute experiments on all 10 protocols (``protocol='fold1'`` ... ``protocol='fold10'``)
 and average the resulting classification results (cf. http://vis-www.cs.umass.edu/lfw for details on scoring).
 
-The design of this implementation differs slightly compared to the one from http://vis-www.cs.umass.edu/lfw.
-Originally, only lists of image pairs are provided by the creators of the LFW database.
+The design of this implementation differs slightly compared to the one from http://www.cs.tau.ac.il/~wolf/ytfaces.
+Originally, only lists of image pairs are provided by the creators of the YouTube database.
 To be consistent with other Bob databases, here the lists are split up into files to be enrolled, and probe files.
 The files to be enrolled are always the first file in the pair, while the second pair item is used as probe.
 
@@ -52,19 +50,26 @@ If you want to stick to the original protocol and use only the pairs for trainin
   The pairs that are provided using the ``pairs`` function, and the files provided by the ``objects`` function (see note above) correspond to the identical model/probe pairs.
   Hence, either of the two approaches should give the same recognition results.
 
-The database comes with automatically detected annotations of several landmarks, which are provided by:
-http://lear.inrialpes.fr/people/guillaumin/data.php.
-To be consistent with our other image databases, we added the eye center coordinates ``'leye'`` and ``'reye'`` automatically by averaging between the eye corners of the accorsing eyes.
-
-.. warning::
-  The annotations are provided for the ``funneled`` images (**not the deep funneled ones**), which can be downloaded from http://vis-www.cs.umass.edu/lfw as well.
-  For the original LFW images, these annotations won't work.
-
-.. note::
-  There is also the possibility to include other annotations into the database.
-  Currently, including annotations from Idiap is implemented (but they are not included in the PyPI package).
 """
 
 from .query import Database
+from .models import Client, Directory, Pair
 
-__all__ = ['Database']
+def get_config():
+  """Returns a string containing the configuration information.
+  """
+
+  import pkg_resources
+
+  packages = pkg_resources.require(__name__)
+  this = packages[0]
+  deps = packages[1:]
+
+  retval =  "%s: %s (%s)\n" % (this.key, this.version, this.location)
+  retval += "  - python dependencies:\n"
+  for d in deps: retval += "    - %s: %s (%s)\n" % (d.key, d.version, d.location)
+
+  return retval.strip()
+
+# gets sphinx autodoc done right - don't remove it
+__all__ = [_ for _ in dir() if not _.startswith('_')]

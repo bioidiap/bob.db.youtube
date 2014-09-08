@@ -21,7 +21,9 @@
 """
 
 import os
-import bob
+import bob.db.base
+import bob.io.base
+import bob.io.matlab
 import pkg_resources
 
 from .models import *
@@ -33,8 +35,8 @@ def add_directories(session, verbose):
 
   # read the video_names file and the video_labels
   if verbose: print("Adding clients and files ...")
-  with open(pkg_resources.resource_filename('xbob.db.youtube', 'protocol/Youtube_names.txt')) as names:     # the video_names field -- exported to text file
-    labels = bob.io.load(pkg_resources.resource_filename('xbob.db.youtube', 'protocol/Youtube_labels.mat')) # the video_labels field -- exported to a single Matlab file
+  with open(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_names.txt')) as names:     # the video_names field -- exported to text file
+    labels = bob.io.base.load(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_labels.mat')) # the video_labels field -- exported to a single Matlab file
     # iterate over the video names
     for index, line in enumerate(names):
       assert len(line) > 0
@@ -58,7 +60,7 @@ def add_pairs(session, verbose):
 
   # read the splits filename
   if verbose: print("Adding pairs ...")
-  splits = bob.io.load(pkg_resources.resource_filename('xbob.db.youtube', 'protocol/Youtube_splits.mat')) # the Splits field -- exported to a single Matlab file
+  splits = bob.io.base.load(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_splits.mat')) # the Splits field -- exported to a single Matlab file
   session.flush()
 
   for fold in range(splits.shape[2]):
@@ -80,7 +82,7 @@ def add_pairs(session, verbose):
 def create_tables(args):
   """Creates all necessary tables (only to be used at the first time)"""
 
-  from bob.db.utils import create_engine_try_nolock
+  from bob.db.base.utils import create_engine_try_nolock
 
   engine = create_engine_try_nolock(args.type, args.files[0], echo=(args.verbose > 2))
   Client.metadata.create_all(engine)
@@ -93,7 +95,7 @@ def create_tables(args):
 def create(args):
   """Creates or re-creates this database"""
 
-  from bob.db.utils import session_try_nolock
+  from bob.db.base.utils import session_try_nolock
 
   dbfile = args.files[0]
 

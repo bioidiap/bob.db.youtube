@@ -9,10 +9,10 @@ from setuptools import setup, find_packages
 # parameters that define our package.
 setup(
 
-    name='xbob.db.youtube',
-    version='1.0.0a0',
+    name='bob.db.youtube',
+    version='2.0.0a0',
     description='Youtube Faces Database Access API for Bob',
-    url='http://github.com/bioidiap/xbob.db.youtube',
+    url='http://github.com/bioidiap/bob.db.youtube',
     license='GPLv3',
     author='Manuel Guenther',
     author_email='manuel.guenther@idiap.ch',
@@ -26,26 +26,24 @@ setup(
     install_requires=[
       'setuptools',
       'six',  # py2/3 compatibility library
-      'bob',  # base signal proc./machine learning library
-      'xbob.db.verification.utils>=1.0.0' # defines a set of utilities for face verification databases like this one.
+      'bob.io.base',
+      'bob.io.matlab', # to read MatLab files of the original protocol
+      'bob.db.base',
+      'bob.db.verification.utils' # defines a set of utilities for face verification databases like this one.
     ],
 
     namespace_packages = [
-      'xbob',
-      'xbob.db',
-      ],
+      'bob',
+      'bob.db',
+    ],
 
     entry_points = {
       # bob database declaration
       'bob.db': [
-        'lfw = xbob.db.youtube.driver:Interface',
-        ],
+        'youtube = bob.db.youtube.driver:Interface',
+      ],
 
-      # bob unittest declaration
-      'bob.test': [
-        'lfw = xbob.db.youtube.test:YoutubeDatabaseTest',
-        ],
-      },
+    },
 
     classifiers = [
       'Development Status :: 4 - Beta',
@@ -56,5 +54,5 @@ setup(
       'Programming Language :: Python :: 3',
       'Topic :: Scientific/Engineering :: Artificial Intelligence',
       'Topic :: Database :: Front-Ends',
-      ],
+    ],
 )

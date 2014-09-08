@@ -17,19 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Table models and functionality for the LFW database.
+"""Table models and functionality for the YouTube database.
 """
 
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, or_, and_, not_
-from bob.db.sqlalchemy_migration import Enum, relationship
+from bob.db.base.sqlalchemy_migration import Enum, relationship
 from sqlalchemy.orm import backref
 from sqlalchemy.ext.declarative import declarative_base
 
-import xbob.db.verification.utils
+import bob.db.verification.utils
 
 import os
-import bob
 
 Base = declarative_base()
 
@@ -53,7 +52,7 @@ class Client(Base):
     return "<Client('%d')>" % self.id
 
 
-class Directory(Base, xbob.db.verification.utils.File):
+class Directory(Base, bob.db.verification.utils.File):
   """Information about the directories of the Youtube Faces database."""
   __tablename__ = 'directory'
 
@@ -72,7 +71,7 @@ class Directory(Base, xbob.db.verification.utils.File):
   def __init__(self, file_id, client_id, path):
     # call base class constructor
     shot_id = int(os.path.basename(path))
-    xbob.db.verification.utils.File.__init__(self, file_id = file_id, client_id = client_id, path = path)
+    bob.db.verification.utils.File.__init__(self, file_id = file_id, client_id = client_id, path = path)
     self.shot_id = shot_id
 
 

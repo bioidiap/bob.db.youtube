@@ -18,20 +18,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """This module provides the Dataset interface allowing the user to query the
-LFW database.
+YouTube database.
 """
 
 import six
-from bob.db import utils
+from bob.db.base import utils
 from .models import *
 from sqlalchemy.orm import aliased
 from .driver import Interface
+import glob
 
-import xbob.db.verification.utils
+import bob.db.verification.utils
 
 SQLITE_FILE = Interface().files()[0]
 
-class Database(xbob.db.verification.utils.SQLiteDatabase):
+class Database(bob.db.verification.utils.SQLiteDatabase):
   """The dataset class opens and maintains a connection opened to the Database.
 
   It provides many different ways to probe for the characteristics of the data
@@ -39,8 +40,19 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
   """
 
   def __init__(self, original_directory = None, original_extension = '/*.jpg', annotation_extension = '.labeled_faces.txt'):
+    """**Keyword parameters**
+
+    original_directory : str
+      The directory where the original images (and annotations) can be found
+
+    original_extension : str
+      The filename filter to find the orignal images in the database; rarely changed
+
+    annotation_extension : str
+      The filename extension of the annotation files; rarely changed
+    """
     # call base class constructor
-    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, Directory, original_directory=original_directory, original_extension=original_extension)
+    bob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, Directory, original_directory=original_directory, original_extension=original_extension)
 
     self.m_valid_protocols = ('fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
@@ -168,7 +180,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     groups
       The groups to which the clients belong; one or several of: ('dev', 'eval')
 
-    Returns: A list containing all File objects which have the desired properties.
+    Returns: A list containing all Directory objects which have the desired properties.
     """
 
     protocols = self.check_parameters_for_validity(protocol, 'protocol', self.m_valid_protocols)
@@ -257,7 +269,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
 
 
-  def get_client_id_from_file_id(self, file_id):
+  def get_client_id_from_file_id(self, file_id, **kwargs):
     """Returns the client_id (real client id) attached to the given file_id
 
     Keyword Parameters:
@@ -276,7 +288,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return q.first().client_id
 
 
-  def get_client_id_from_model_id(self, model_id):
+  def get_client_id_from_model_id(self, model_id, **kwargs):
     """Returns the client_id (real client id) attached to the given model id
 
     Keyword Parameters:
@@ -292,7 +304,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
 
   def objects(self, protocol=None, model_ids=None, groups=None, purposes=None, subworld='sevenfolds', world_type='unrestricted'):
-    """Returns a list of File objects for the specific query by the user.
+    """Returns a list of Directory objects for the specific query by the user.
 
     Keyword Parameters:
 
@@ -320,7 +332,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       If 'None' is given (this is the default), no filter over the model_ids is performed.
       Note that the combination of 'world' group and 'model_ids' should be avoided.
 
-    Returns: A list of File objects considering all the filtering criteria.
+    Returns: A list of Directory objects considering all the filtering criteria.
     """
 
     protocols = self.check_parameters_for_validity(protocol, "protocol", self.m_valid_protocols)
@@ -412,7 +424,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     groups
       Ignored.
 
-    Returns: A set of Files with the given properties.
+    Returns: A set of Directory objects with the given properties.
     """
     return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids = model_ids, purposes='enrol')
 
@@ -434,10 +446,9 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     groups
       Ignored.
 
-    Returns: A set of Files with the given properties.
+    Returns: A set of Directory objects with the given properties.
     """
     return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids = model_ids, purposes='probe')
-
 
 
   def pairs(self, protocol=None, groups=None, classes=None, subworld='sevenfolds'):
@@ -498,22 +509,24 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
     return retval
 
-  def annotations(self, file_id, indices = None):
-    """Returns the annotations for the given file id as a dictionary of dictionaries, e.g. {1 : {'topleft':(y,x), 'bottomright':(y,x)}, 2 : {'topleft':(y,x), 'bottomright':(y,x)}, ...}.
+
+  def annotations(self, directory_id, image_names = None):
+    """Returns the annotations for the given file id as a dictionary of dictionaries, e.g. {'1.56.jpg' : {'topleft':(y,x), 'bottomright':(y,x)}, '1.57.jpg' : {'topleft':(y,x), 'bottomright':(y,x)}, ...}.
+    Here, the key of the dictionary is the full image file name of the original image.
 
     Keyword parameters:
 
-    file_id
-      The id of the file for which you want to retrieve the annotations
+    directory_id
+      The id of the directory for which you want to retrieve the annotations
 
-    indices
-      If given, only the annotations for the given frame indices are extracted and returned.
+    image_names
+      If given, only the annotations for the given image names (without path, but including filaname extension) are extracted and returned
     """
     self.assert_validity()
     if self.original_directory is None:
       raise ValueError("Please specify the 'original_directory' in the constructor of this class to get the annotations.")
 
-    query = self.query(Directory).filter(Directory.id == file_id)
+    query = self.query(Directory).filter(Directory.id == directory_id)
     assert query.count() == 1
     video = query.first()
     if video.client is None:
@@ -523,12 +536,12 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     annots = {}
 
     with open(annotation_file) as f:
-      index = 0
       for line in f:
         splits = line.rstrip().split(',')
         shot_id = int(splits[0].split('\\')[1])
+        index = splits[0].split('\\')[2]
         if shot_id == video.shot_id:
-          if indices is None or index in indices:
+          if image_names is None or index in image_names:
             # coordinates are: center x, center y, width, height
             (center_y, center_x, d_y, d_x) = (float(splits[3]), float(splits[2]), float(splits[5])/2., float(splits[4])/2.)
             # extract the bounding box information
@@ -536,9 +549,20 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
                 'topleft' : (center_y - d_y, center_x - d_x),
                 'bottomright' : (center_y + d_y, center_x + d_x)
             }
-          index += 1
 
     # return the annotations as returned by the call function of the Annotation object
     return annots
+
+
+  def original_image_list(self, directory):
+    """Returns the list of original image names for the given ``Directory``."""
+    # get original filename expression for the database
+    file_name_filter = self.original_file_name(directory, check_existence = False)
+
+    # list the data
+    import glob
+    file_name_list = glob.glob(file_name_filter)
+    # get the file names sorted by id
+    return sorted(file_name_list, key = lambda x: int(x.split('.')[-2]))
 
 
