@@ -13,12 +13,15 @@
  User's Guide
 ==============
 
-This database interface implements the default evaluation protocols as they are given on the `YouTube Faces Database web page <http://www.cs.tau.ac.il/~wolf/ytfaces>`_.
-It implements the :py:mod:`bob.db.verifcation.utils` interface, so that it can be used like any other of our databases.
+This package contains the access API and descriptions for the `YouTube Faces`_ database.
+It only contains the Bob_ accessor methods to use the DB directly from python, with our certified protocols.
+The actual raw data for the `YouTube Faces`_ database should be downloaded from the original URL (though we were not able to contact the corresponding Professor).
 
-.. note::
-  This database interface does not include the original data.
-  To be able to run experiments on the YouTube Faces database, you need to get a copy of the original data from the above mentioned web page.
+
+The Database Interface
+----------------------
+
+The :py:class:`bob.db.youtube.Database` complies with the standard biometric verification database as described in :ref:`commons`, implementing the interface :py:class:`bob.db.verification.utils.SQLiteDatabase`.
 
 
 The Protocols
@@ -43,7 +46,7 @@ For example, to get the list of supported protocols, you can query the list of s
    >>> db.protocol_names()
    ('fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
 
-These protocol names define the 10 different splits of the YouTube Faces protocol, for which experiments can be run.
+These protocol names define the 10 different splits of the `YouTube Faces`_ protocol, for which experiments can be run.
 Some of the remaining query functions require a protocol to be selected.
 
 For each protocol, the splits of the database are distributed into three different groups: ``('world', 'dev', 'eval')``.
@@ -61,13 +64,12 @@ For the final evaluation it is required that 10 different experiments are execut
 Finally, the classification accuracy is reported as an average of the 10 classification results.
 
 
-
 The Directory Objects
 ---------------------
 
 The most important method of the interface is the :py:func:`bob.db.youtube.Database.objects` function.
-You can use this function to query the `information` for the protocols.
-For the YouTube database, the `information` consists of a list of :py:class:`bob.db.youtube.models.Directory`.
+You can use this function to query the *information* for the protocols.
+For the YouTube database, the information consists of a list of :py:class:`bob.db.youtube.models.Directory`.
 Each ``Directory`` contains information about a video, such as the identity of the client, the shot id and the (relative) path of the directory in the database:
 
 .. .. doctest::
@@ -83,7 +85,7 @@ Each ``Directory`` contains information about a video, such as the identity of t
    1
    >>> d.shot_id
    0
-   >>> d.path
+   >>> d.path                   #doctest:+SKIP
    u'AJ_Cook/0'
 
 These ``Directory`` objects can be used to get the path for the image data.
@@ -97,8 +99,8 @@ Since the videos are stored as a list of frames, the ``Directory`` interface wil
    [...]/AJ_Cook/0/0.123.jpg
 
 .. warning::
-  Please note that -- in opposition to other bob.db database interfaces -- the ``original_file_name`` function returns a **list** of file names.
-  Likewise, ``original_file_names`` returns a list of lists of file names.
+  Please note that -- in opposition to most other bob.db database interfaces -- the :py:meth:`bob.db.youtube.Database.original_file_name` function returns a **list** of file names.
+  Likewise, :py:meth:`bob.db.youtube.Database.original_file_names` returns a list of lists of file names.
 
 
 Finally, bounding boxes are annotated in the images.
@@ -108,23 +110,26 @@ In the example below, the annotations for the first 20 images are read and retur
 .. code-block:: python
 
   >>> file_name_stems = [os.path.basename(f) for f in file_names[:20]]
-  >>> annotations = db.annotations(d.id, file_name_stems)
+  >>> annotations = db.annotations(d, file_name_stems)
   >>> sorted(annotations.keys()) == file_name_stems
   True
   >>> bounding_box = annotations[file_name_stems[0]]
   >>> print (bounding_box)
   {'topleft': (56.0, 205.0), 'bottomright': (112.0, 261.0)}
 
-The annotations for one image can, for example, be used to cut out the face region from the image:
+The annotations for one image can, for example, be used to cut out the face region from the image, using default functionality from other Bob_ packages:
 
 .. code-block:: python
 
   >>> import bob.io.base
   >>> import bob.io.image
   >>> import bob.ip.color
-  >>> color_image = bob.io.load(file_names[0])
+  >>> color_image = bob.io.base.load(file_names[0])
   >>> gray_image = bob.ip.color.rgb_to_gray(color_image)
   >>> face_region = gray_image[bounding_box['topleft'][0] : bounding_box['bottomright'][0],
                                bounding_box['topleft'][1] : bounding_box['bottomright'][1]]
 
+
+.. _bob: https://www.idiap.ch/software/bob
+.. _youtube faces: http://www.cs.tau.ac.il/~wolf/ytfaces
 

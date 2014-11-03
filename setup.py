@@ -42,10 +42,10 @@ setup(
       'bob.db': [
         'youtube = bob.db.youtube.driver:Interface',
       ],
-
     },
 
     classifiers = [
+      'Framework :: Bob',
       'Development Status :: 4 - Beta',
       'Intended Audience :: Developers',
       'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

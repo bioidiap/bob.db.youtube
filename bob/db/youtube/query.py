@@ -56,7 +56,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     self.m_valid_protocols = ('fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
-    self.m_valid_purposes = ('enrol', 'probe')
+    self.m_valid_purposes = ('enroll', 'probe')
     self.m_valid_classes = ('client', 'impostor') # 'matched' and 'unmatched'
     self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
     self.m_valid_types = ('restricted', 'unrestricted')
@@ -315,7 +315,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
       The groups to which the objects belong ('world', 'dev', 'eval')
 
     purposes
-      The purposes of the objects ('enrol', 'probe')
+      The purposes of the objects ('enroll', 'probe')
 
     subworld
       The subset of the training data. Has to be specified if groups includes 'world'
@@ -366,7 +366,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
       if 'dev' in groups:
         # development set of current fold of view 2
         devset = self.__dev_for__(protocol)
-        if 'enrol' in purposes:
+        if 'enroll' in purposes:
           queries.append(\
               self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).\
                   filter(Pair.protocol.in_(devset)))
@@ -379,7 +379,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
       if 'eval' in groups:
         # evaluation set of current fold of view 2; this is the REAL fold
-        if 'enrol' in purposes:
+        if 'enroll' in purposes:
           queries.append(\
               self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).\
                   filter(Pair.protocol == protocol))
@@ -426,7 +426,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     Returns: A set of Directory objects with the given properties.
     """
-    return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids = model_ids, purposes='enrol')
+    return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids = model_ids, purposes='enroll')
 
 
   def zobjects(self, protocol, model_ids=None, groups=None):
@@ -510,14 +510,14 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
     return retval
 
 
-  def annotations(self, directory_id, image_names = None):
+  def annotations(self, directory, image_names = None):
     """Returns the annotations for the given file id as a dictionary of dictionaries, e.g. {'1.56.jpg' : {'topleft':(y,x), 'bottomright':(y,x)}, '1.57.jpg' : {'topleft':(y,x), 'bottomright':(y,x)}, ...}.
     Here, the key of the dictionary is the full image file name of the original image.
 
     Keyword parameters:
 
-    directory_id
-      The id of the directory for which you want to retrieve the annotations
+    directory
+      The :py:class:`Directory` object for which you want to retrieve the annotations
 
     image_names
       If given, only the annotations for the given image names (without path, but including filaname extension) are extracted and returned
@@ -526,10 +526,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
     if self.original_directory is None:
       raise ValueError("Please specify the 'original_directory' in the constructor of this class to get the annotations.")
 
-    query = self.query(Directory).filter(Directory.id == directory_id)
-    assert query.count() == 1
-    video = query.first()
-    annotation_file = os.path.join(self.original_directory, video.client.name + self.annotation_extension)
+    annotation_file = os.path.join(self.original_directory, directory.client.name + self.annotation_extension)
 
     annots = {}
 
@@ -538,7 +535,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
         splits = line.rstrip().split(',')
         shot_id = int(splits[0].split('\\')[1])
         index = splits[0].split('\\')[2]
-        if shot_id == video.shot_id:
+        if shot_id == directory.shot_id:
           if image_names is None or index in image_names:
             # coordinates are: center x, center y, width, height
             (center_y, center_x, d_y, d_x) = (float(splits[3]), float(splits[2]), float(splits[5])/2., float(splits[4])/2.)

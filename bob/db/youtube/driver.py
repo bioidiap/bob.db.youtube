@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Commands the Labeled Faces in the Wild database can respond to.
+"""Commands the YouTube Faces database can respond to.
 """
 
 import os
@@ -114,7 +114,11 @@ def annotations(args):
     from bob.db.base.utils import null
     output = null()
 
-  a = db.annotations(args.id)
+  f = db.files([args.id])
+  if len(f) != 1:
+    output.write('Cannot find file with id "%d" in database\n' % args.id)
+    return 1
+  a = db.annotations(f[0])
   k = sorted(a.keys(), key=lambda x : int(x.split('.')[1]))
   for i in k:
     output.write("\n%s "%i)

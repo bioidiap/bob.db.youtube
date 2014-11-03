@@ -104,5 +104,5 @@ class Pair(Base):
     self.is_match = is_match
 
   def __repr__(self):
-    return "<Pair('%s', '%s', '%s', '%d')>" % (self.protocol, self.enrol_directory_id, self.probe_directory_id, 1 if self.is_match else 0)
+    return "<Pair('%s', '%s', '%s', '%d')>" % (self.protocol, self.enroll_directory_id, self.probe_directory_id, 1 if self.is_match else 0)
 
