@@ -5,12 +5,15 @@
 
 from setuptools import setup, find_packages
 
+# Define package version
+version = open("version.txt").read().rstrip()
+
 # The only thing we do in this file is to call the setup() function with all
 # parameters that define our package.
 setup(
 
     name='bob.db.youtube',
-    version='2.0.0a0',
+    version=version,
     description='Youtube Faces Database Access API for Bob',
     url='http://github.com/bioidiap/bob.db.youtube',
     license='GPLv3',
