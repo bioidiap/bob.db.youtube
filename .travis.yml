@@ -7,28 +7,27 @@ matrix:
     - secure: lOs+/EAfuj7ISmSdp5d4J06375GNzL08LvwFJDFhbynjK+ld+Gtr+NX4qvcnA5CCPBT8fdIWrqynPKv3gfQBAWzTh2WvmbUuFgZ1ZMJKV1FxCK5RqFxinYjM6I7wpknPdBVxIr4HtDdfk7xsu+8lotcfYRaI0/JLa5E5xLU+YB0=
     - secure: XVEXnr4kcd6s+5Fd+g6A3m18ApFvgmT2LH51HHli4FlGoBuHm4C50sIxMh2tDDpfxxkGjo64AHVb+nHQgTZPYyfg5hXsRiIWyT0tVwvE1EiX5x5WINwgiV+/VMT/lKkkkUD2A4stX7Mjlkvz4UTshXdz9JTg0/aKXPRYEsdS3mA=
     - BOB_DOCUMENTATION_SERVER=https://www.idiap.ch/software/bob/docs/latest/bioidiap/%s/master
-  - python: 3.2
-    env:
-    - NUMPYSPEC===1.8.0
+    - BOB_UPLOAD_WHEEL="--universal"
   - python: 3.3
-    env:
-    - NUMPYSPEC===1.8.0
+  - python: 3.4
 before_install:
 - sudo add-apt-repository -y ppa:biometrics/bob
 - sudo apt-get update -qq
 - sudo apt-get install -qq --force-yes libboost-all-dev libblitz1-dev libhdf5-serial-dev libmatio-dev libatlas-dev libatlas-base-dev liblapack-dev texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
-- if [ -n "${NUMPYSPEC}" ]; then sudo apt-get install -qq gfortran; fi
-- if [ -n "${NUMPYSPEC}" ]; then pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel numpy$NUMPYSPEC; fi
-- pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel sphinx nose==1.3.0 jinja2==2.6 coveralls pygments==1.6
+- pip install --find-links https://www.idiap.ch/software/bob/wheels/travis/ --use-wheel sphinx nose numpy coverage
+- pip install --find-links https://www.idiap.ch/software/bob/wheels/travis/ --use-wheel --pre -r requirements.txt coveralls
 install:
 - python bootstrap-buildout.py
-- ./bin/buildout
+- ./bin/buildout buildout:develop=. buildout:extensions=bob.buildout buildout:auto-checkout=
 script:
-- ./bin/python -c 'from bob.db.youtube import get_config; print(get_config())'
+- ./bin/python -c 'import pkg_resources; from bob.db.youtube import get_config; print(get_config())'
 - ./bin/bob_dbmanage.py youtube download
 - ./bin/coverage run --source=bob.db.youtube ./bin/nosetests -sv
 - ./bin/sphinx-build -b doctest doc sphinx
 - ./bin/sphinx-build -b html doc sphinx
 after_success:
 - coveralls
-- ./src/bob.extension/scripts/upload-sphinx.sh
+- wget https://raw.githubusercontent.com/bioidiap/bob.extension/master/scripts/upload-{sphinx,wheel}.sh
+- chmod a+x upload-sphinx.sh upload-wheel.sh
+- ./upload-sphinx.sh
+- ./upload-wheel.sh
