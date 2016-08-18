@@ -26,7 +26,7 @@ from bob.db.base.sqlalchemy_migration import Enum, relationship
 from sqlalchemy.orm import backref
 from sqlalchemy.ext.declarative import declarative_base
 
-import bob.db.verification.utils
+import bob.db.base
 
 import os
 
@@ -52,7 +52,7 @@ class Client(Base):
     return "<Client('%d')>" % self.id
 
 
-class Directory(Base, bob.db.verification.utils.File):
+class Directory(Base, bob.db.base.File):
   """Information about the directories of the Youtube Faces database."""
   __tablename__ = 'directory'
 
@@ -71,7 +71,7 @@ class Directory(Base, bob.db.verification.utils.File):
   def __init__(self, file_id, client_id, path):
     # call base class constructor
     shot_id = int(os.path.basename(path))
-    bob.db.verification.utils.File.__init__(self, file_id = file_id, client_id = client_id, path = path)
+    bob.db.base.File.__init__(self, file_id = file_id, client_id = client_id, path = path)
     self.shot_id = shot_id
 
 

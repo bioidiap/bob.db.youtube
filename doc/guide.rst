@@ -10,7 +10,7 @@
   YOUR_DATABASE_DIRECTORY = '/idiap/resource/database/YouTubeFaces/frame_images_DB'
 
 ==============
- User's Guide
+ User's Guide	
 ==============
 
 This package contains the access API and descriptions for the `YouTube Faces`_ database.

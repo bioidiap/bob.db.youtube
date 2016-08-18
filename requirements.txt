@@ -3,4 +3,3 @@ six
 bob.io.base
 bob.io.matlab
 bob.db.base
-bob.db.verification.utils

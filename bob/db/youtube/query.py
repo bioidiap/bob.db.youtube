@@ -28,11 +28,11 @@ from sqlalchemy.orm import aliased
 from .driver import Interface
 import glob
 
-import bob.db.verification.utils
+import bob.db.base
 
 SQLITE_FILE = Interface().files()[0]
 
-class Database(bob.db.verification.utils.SQLiteDatabase):
+class Database(bob.db.base.SQLiteDatabase):
   """The dataset class opens and maintains a connection opened to the Database.
 
   It provides many different ways to probe for the characteristics of the data
@@ -52,7 +52,10 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
       The filename extension of the annotation files; rarely changed
     """
     # call base class constructor
-    bob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, Directory, original_directory=original_directory, original_extension=original_extension)
+    super(Database, self).__init__(SQLITE_FILE, Directory)
+    self.original_directory = original_directory
+    self.original_extension = original_extension
+
 
     self.m_valid_protocols = ('fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
@@ -563,7 +566,15 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
     """
 
     # get original filename expression for the directory
-    file_name_filter = bob.db.verification.utils.SQLiteDatabase.original_file_name(self, directory, check_existence = False)
+    #file_name_filter = bob.db.base.Database.original_file_name(self, directory, check_existence = False)
+    # check if directory is set
+    if not self.original_directory or not self.original_extension:
+      raise ValueError("The original_directory and/or the original_extension were not specified in the constructor.")
+    # extract file name
+    file_name_list = directory.make_path(self.original_directory, self.original_extension)
+    if not check_existence or os.path.exists(file_name):
+      return file_name_list
+    
 
     # list the data
     import glob
