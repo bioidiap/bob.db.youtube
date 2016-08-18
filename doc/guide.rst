@@ -21,7 +21,7 @@ The actual raw data for the `YouTube Faces`_ database should be downloaded from 
 The Database Interface
 ----------------------
 
-The :py:class:`bob.db.youtube.Database` complies with the standard biometric verification database as described in :ref:`commons`, implementing the interface :py:class:`bob.db.verification.utils.SQLiteDatabase`.
+The :py:class:`bob.db.youtube.Database` complies with the standard biometric verification database as described in :ref:`commons`, implementing the interface :py:class:`bob.db.base.SQLiteDatabase`.
 
 
 The Protocols
