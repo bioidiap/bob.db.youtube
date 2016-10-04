@@ -21,7 +21,7 @@ The actual raw data for the `YouTube Faces`_ database should be downloaded from 
 The Database Interface
 ----------------------
 
-The :py:class:`bob.db.youtube.Database` complies with the standard biometric verification database as described in :ref:`commons`, implementing the interface :py:class:`bob.db.base.SQLiteDatabase`.
+The :py:class:`bob.db.youtube.Database` complies with the standard biometric verification database as described in `bob.db.base <bob.db.base>`, implementing the interface :py:class:`bob.db.base.SQLiteDatabase`.
 
 
 The Protocols
@@ -100,7 +100,7 @@ Since the videos are stored as a list of frames, the ``Directory`` interface wil
 
 .. warning::
   Please note that -- in opposition to most other bob.db database interfaces -- the :py:meth:`bob.db.youtube.Database.original_file_name` function returns a **list** of file names.
-  Likewise, :py:meth:`bob.db.youtube.Database.original_file_names` returns a list of lists of file names.
+  Likewise, :py:meth:`bob.db.youtube.Database.original_file_name` returns a list of lists of file names.
 
 
 Finally, bounding boxes are annotated in the images.
