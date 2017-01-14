@@ -71,7 +71,8 @@ class Directory(Base, bob.db.base.File):
   def __init__(self, file_id, client_id, path):
     # call base class constructor
     shot_id = int(os.path.basename(path))
-    bob.db.base.File.__init__(self, file_id = file_id, client_id = client_id, path = path)
+    bob.db.base.File.__init__(self, file_id = file_id, path = path)
+    self.client_id = client_id
     self.shot_id = shot_id
 
 
