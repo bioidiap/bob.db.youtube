@@ -32,6 +32,7 @@ import bob.db.base
 
 SQLITE_FILE = Interface().files()[0]
 
+
 class Database(bob.db.base.SQLiteDatabase):
   """The dataset class opens and maintains a connection opened to the Database.
 
@@ -39,7 +40,7 @@ class Database(bob.db.base.SQLiteDatabase):
   and for the data itself inside the database.
   """
 
-  def __init__(self, original_directory = None, original_extension = '/*.jpg', annotation_extension = '.labeled_faces.txt'):
+  def __init__(self, original_directory=None, original_extension='/*.jpg', annotation_extension='.labeled_faces.txt'):
     """**Keyword parameters**
 
     original_directory : str
@@ -52,34 +53,35 @@ class Database(bob.db.base.SQLiteDatabase):
       The filename extension of the annotation files; rarely changed
     """
     # call base class constructor
-    super(Database, self).__init__(SQLITE_FILE, Directory)
-    self.original_directory = original_directory
-    self.original_extension = original_extension
+    super(Database, self).__init__(SQLITE_FILE, Directory,
+                                   original_directory, original_extension)
 
-
-    self.m_valid_protocols = ('fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
+    self.m_valid_protocols = ('fold1', 'fold2', 'fold3', 'fold4',
+                              'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
     self.m_valid_purposes = ('enroll', 'probe')
-    self.m_valid_classes = ('client', 'impostor') # 'matched' and 'unmatched'
-    self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
+    self.m_valid_classes = ('client', 'impostor')  # 'matched' and 'unmatched'
+    self.m_subworld_counts = {'onefolds': 1, 'twofolds': 2, 'threefolds': 3,
+                              'fourfolds': 4, 'fivefolds': 5, 'sixfolds': 6, 'sevenfolds': 7}
     self.m_valid_types = ('restricted', 'unrestricted')
 
     self.annotation_extension = annotation_extension
-
 
   def __eval__(self, fold):
     return int(fold[4:])
 
   def __dev__(self, eval):
-    # take the two parts of the training set (the ones before the eval set) for dev
+    # take the two parts of the training set (the ones before the eval set)
+    # for dev
     return ((eval + 7) % 10 + 1, (eval + 8) % 10 + 1)
 
   def __dev_for__(self, fold):
-    return ["fold%d"%f for f in self.__dev__(self.__eval__(fold))]
+    return ["fold%d" % f for f in self.__dev__(self.__eval__(fold))]
 
   def __zt_fold_for__(self, fold):
-    if fold is None: return None
-    return 'fold%d' % ((int(fold[4:]) + 7)%10 + 1)
+    if fold is None:
+      return None
+    return 'fold%d' % ((int(fold[4:]) + 7) % 10 + 1)
 
   def __world_for__(self, fold, subworld):
     # the training sets for each fold are composed of all folds
@@ -90,8 +92,7 @@ class Database(bob.db.base.SQLiteDatabase):
     world = []
     for i in range(world_count):
       world.append((eval + i) % 10 + 1)
-    return ["fold%d"%f for f in world]
-
+    return ["fold%d" % f for f in world]
 
   def protocol_names(self):
     """Returns the names of the valid protocols."""
@@ -108,7 +109,6 @@ class Database(bob.db.base.SQLiteDatabase):
   def world_types(self):
     """Returns the valid types of worlds: ('restricted', 'unrestricted')."""
     return self.m_valid_types
-
 
   def clients(self, protocol=None, groups=None, subworld='sevenfolds', world_type='unrestricted'):
     """Returns a list of Client objects for the specific query by the user.
@@ -132,11 +132,15 @@ class Database(bob.db.base.SQLiteDatabase):
 
     Returns: A list containing all Client objects which have the desired properties.
     """
-    protocols = self.check_parameters_for_validity(protocol, 'protocol', self.m_valid_protocols)
-    groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
+    protocols = self.check_parameters_for_validity(
+        protocol, 'protocol', self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(
+        groups, 'group', self.m_valid_groups)
     if subworld != None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
-    world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
+      subworld = self.check_parameter_for_validity(
+          subworld, 'sub-world', list(self.m_subworld_counts.keys()))
+    world_type = self.check_parameter_for_validity(
+        world_type, 'training type', self.m_valid_types)
 
     queries = []
 
@@ -145,22 +149,22 @@ class Database(bob.db.base.SQLiteDatabase):
       if 'world' in groups:
         # select training set for the given fold
         trainset = self.__world_for__(protocol, subworld)
-        queries.append(\
-            self.query(Client).join(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).\
-                  filter(Pair.protocol.in_(trainset)).\
-                  order_by(Client.id))
+        queries.append(
+            self.query(Client).join(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).
+            filter(Pair.protocol.in_(trainset)).
+            order_by(Client.id))
       if 'dev' in groups:
         # select development set for the given fold
         devset = self.__dev_for__(protocol)
-        queries.append(\
-            self.query(Client).join(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).\
-                  filter(Pair.protocol.in_(devset)).\
-                  order_by(Client.id))
+        queries.append(
+            self.query(Client).join(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).
+            filter(Pair.protocol.in_(devset)).
+            order_by(Client.id))
       if 'eval' in groups:
-        queries.append(\
-            self.query(Client).join(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).\
-                  filter(Pair.protocol == protocol).\
-                  order_by(Client.id))
+        queries.append(
+            self.query(Client).join(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).
+            filter(Pair.protocol == protocol).
+            order_by(Client.id))
 
     # all queries are made; now collect the clients
     retval = []
@@ -169,7 +173,6 @@ class Database(bob.db.base.SQLiteDatabase):
         retval.append(client)
 
     return self.uniquify(retval)
-
 
   def models(self, protocol=None, groups=None):
     """Returns a list of Directory objects (there are multiple models per client) for the specific query by the user.
@@ -186,8 +189,10 @@ class Database(bob.db.base.SQLiteDatabase):
     Returns: A list containing all Directory objects which have the desired properties.
     """
 
-    protocols = self.check_parameters_for_validity(protocol, 'protocol', self.m_valid_protocols)
-    groups = self.check_parameters_for_validity(groups, 'group', ('dev', 'eval'))
+    protocols = self.check_parameters_for_validity(
+        protocol, 'protocol', self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(
+        groups, 'group', ('dev', 'eval'))
 
     # the restricted case...
     queries = []
@@ -197,13 +202,13 @@ class Database(bob.db.base.SQLiteDatabase):
       if 'dev' in groups:
         # select development set for the given fold
         devset = self.__dev_for__(protocol)
-        queries.append(\
-            self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).\
-                  filter(Pair.protocol.in_(devset)))
+        queries.append(
+            self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).
+            filter(Pair.protocol.in_(devset)))
       if 'eval' in groups:
-        queries.append(\
-            self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).\
-                  filter(Pair.protocol == protocol))
+        queries.append(
+            self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).
+            filter(Pair.protocol == protocol))
 
     # all queries are made; now collect the files
     retval = []
@@ -211,7 +216,6 @@ class Database(bob.db.base.SQLiteDatabase):
       retval.extend([file for file in query])
 
     return self.uniquify(retval)
-
 
   def model_ids(self, protocol=None, groups=None):
     """Returns a list of model ids for the specific query by the user.
@@ -228,8 +232,7 @@ class Database(bob.db.base.SQLiteDatabase):
 
     Returns: A list containing all model ids which have the desired properties.
     """
-    return [file.id for file in self.models(protocol,groups)]
-
+    return [file.id for file in self.models(protocol, groups)]
 
   def tmodels(self, protocol=None, groups=None):
     """Returns a list of T-Norm models that can be used for ZT norm.
@@ -250,8 +253,7 @@ class Database(bob.db.base.SQLiteDatabase):
     """
     return self.models(self.__zt_fold_for__(protocol), groups='dev')
 
-
-  def tmodel_ids(self, protocol, groups = None):
+  def tmodel_ids(self, protocol, groups=None):
     """Returns a list of T-Norm model ids that can be used for ZT norm.
     In fact, it uses the model ids from two other splits of the data,
     specifically, the last two of the training splits.
@@ -270,8 +272,6 @@ class Database(bob.db.base.SQLiteDatabase):
     """
     return [file.id for file in self.tmodels(protocol, groups)]
 
-
-
   def get_client_id_from_file_id(self, file_id, **kwargs):
     """Returns the client_id (real client id) attached to the given file_id
 
@@ -285,11 +285,10 @@ class Database(bob.db.base.SQLiteDatabase):
     self.assert_validity()
 
     q = self.query(Directory).\
-          filter(Directory.id == file_id)
+        filter(Directory.id == file_id)
 
     assert q.count() == 1
     return q.first().client_id
-
 
   def get_client_id_from_model_id(self, model_id, **kwargs):
     """Returns the client_id (real client id) attached to the given model id
@@ -304,7 +303,6 @@ class Database(bob.db.base.SQLiteDatabase):
 
     # since there is one model per file, we can re-use the function above.
     return self.get_client_id_from_file_id(model_id)
-
 
   def objects(self, protocol=None, model_ids=None, groups=None, purposes=None, subworld='sevenfolds', world_type='unrestricted'):
     """Returns a list of Directory objects for the specific query by the user.
@@ -338,15 +336,20 @@ class Database(bob.db.base.SQLiteDatabase):
     Returns: A list of Directory objects considering all the filtering criteria.
     """
 
-    protocols = self.check_parameters_for_validity(protocol, "protocol", self.m_valid_protocols)
-    groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
-    purposes = self.check_parameters_for_validity(purposes, "purpose", self.m_valid_purposes)
-    world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
+    protocols = self.check_parameters_for_validity(
+        protocol, "protocol", self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(
+        groups, "group", self.m_valid_groups)
+    purposes = self.check_parameters_for_validity(
+        purposes, "purpose", self.m_valid_purposes)
+    world_type = self.check_parameter_for_validity(
+        world_type, 'training type', self.m_valid_types)
 
     if subworld != None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
+      subworld = self.check_parameter_for_validity(
+          subworld, 'sub-world', list(self.m_subworld_counts.keys()))
 
-    if(isinstance(model_ids,six.string_types)):
+    if(isinstance(model_ids, six.string_types)):
       model_ids = (model_ids,)
 
     queries = []
@@ -358,40 +361,40 @@ class Database(bob.db.base.SQLiteDatabase):
         # world set of current fold of view 2
         trainset = self.__world_for__(protocol, subworld)
         if world_type == 'restricted':
-          queries.append(\
-              self.query(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).\
-                  filter(Pair.protocol.in_(trainset)))
+          queries.append(
+              self.query(Directory).join((Pair, or_(Directory.id == Pair.enroll_directory_id, Directory.id == Pair.probe_directory_id))).
+              filter(Pair.protocol.in_(trainset)))
         else:
-          queries.append(\
-              self.query(Directory).join(Client).join((Pair, or_(Client.id == Pair.enroll_client_id, Client.id == Pair.probe_client_id))).\
-                  filter(Pair.protocol.in_(trainset)))
+          queries.append(
+              self.query(Directory).join(Client).join((Pair, or_(Client.id == Pair.enroll_client_id, Client.id == Pair.probe_client_id))).
+              filter(Pair.protocol.in_(trainset)))
 
       if 'dev' in groups:
         # development set of current fold of view 2
         devset = self.__dev_for__(protocol)
         if 'enroll' in purposes:
-          queries.append(\
-              self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).\
-                  filter(Pair.protocol.in_(devset)))
+          queries.append(
+              self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).
+              filter(Pair.protocol.in_(devset)))
         if 'probe' in purposes:
-          probe_queries.append(\
-              self.query(Directory).\
-                  join((Pair, Directory.id == Pair.probe_directory_id)).\
-                  join((directory_alias, directory_alias.id == Pair.enroll_directory_id)).\
-                  filter(Pair.protocol.in_(devset)))
+          probe_queries.append(
+              self.query(Directory).
+              join((Pair, Directory.id == Pair.probe_directory_id)).
+              join((directory_alias, directory_alias.id == Pair.enroll_directory_id)).
+              filter(Pair.protocol.in_(devset)))
 
       if 'eval' in groups:
         # evaluation set of current fold of view 2; this is the REAL fold
         if 'enroll' in purposes:
-          queries.append(\
-              self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).\
-                  filter(Pair.protocol == protocol))
+          queries.append(
+              self.query(Directory).join((Pair, Directory.id == Pair.enroll_directory_id)).
+              filter(Pair.protocol == protocol))
         if 'probe' in purposes:
-          probe_queries.append(\
-              self.query(Directory).\
-                  join((Pair, Directory.id == Pair.probe_directory_id)).\
-                  join((directory_alias, directory_alias.id == Pair.enroll_directory_id)).\
-                  filter(Pair.protocol == protocol))
+          probe_queries.append(
+              self.query(Directory).
+              join((Pair, Directory.id == Pair.probe_directory_id)).
+              join((directory_alias, directory_alias.id == Pair.enroll_directory_id)).
+              filter(Pair.protocol == protocol))
 
     retval = []
     for query in queries:
@@ -408,7 +411,6 @@ class Database(bob.db.base.SQLiteDatabase):
         retval.append(probe)
 
     return self.uniquify(retval)
-
 
   def tobjects(self, protocol, model_ids=None, groups=None):
     """Returns a set of filenames for enrolling T-norm models for score
@@ -429,8 +431,7 @@ class Database(bob.db.base.SQLiteDatabase):
 
     Returns: A set of Directory objects with the given properties.
     """
-    return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids = model_ids, purposes='enroll')
-
+    return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids=model_ids, purposes='enroll')
 
   def zobjects(self, protocol, model_ids=None, groups=None):
     """Returns a set of filenames for Z-norm probing for score
@@ -451,8 +452,7 @@ class Database(bob.db.base.SQLiteDatabase):
 
     Returns: A set of Directory objects with the given properties.
     """
-    return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids = model_ids, purposes='probe')
-
+    return self.objects(self.__zt_fold_for__(protocol), groups='dev', model_ids=model_ids, purposes='probe')
 
   def pairs(self, protocol=None, groups=None, classes=None, subworld='sevenfolds'):
     """Queries a list of Pair's of files.
@@ -478,14 +478,18 @@ class Database(bob.db.base.SQLiteDatabase):
 
     def default_query():
       return self.query(Pair).\
-                join((Directory1, Directory1.id == Pair.enroll_directory_id)).\
-                join((Directory2, Directory2.id == Pair.probe_directory_id))
+          join((Directory1, Directory1.id == Pair.enroll_directory_id)).\
+          join((Directory2, Directory2.id == Pair.probe_directory_id))
 
-    protocol = self.check_parameter_for_validity(protocol, "protocol", self.m_valid_protocols)
-    groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
-    classes = self.check_parameters_for_validity(classes, "class", self.m_valid_classes)
+    protocol = self.check_parameter_for_validity(
+        protocol, "protocol", self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(
+        groups, "group", self.m_valid_groups)
+    classes = self.check_parameters_for_validity(
+        classes, "class", self.m_valid_classes)
     if subworld != None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
+      subworld = self.check_parameter_for_validity(
+          subworld, 'sub-world', list(self.m_subworld_counts.keys()))
 
     queries = []
     Directory1 = aliased(Directory)
@@ -512,8 +516,7 @@ class Database(bob.db.base.SQLiteDatabase):
 
     return retval
 
-
-  def annotations(self, directory, image_names = None):
+  def annotations(self, directory, image_names=None):
     """Returns the annotations for the given file id as a dictionary of dictionaries, e.g. {'1.56.jpg' : {'topleft':(y,x), 'bottomright':(y,x)}, '1.57.jpg' : {'topleft':(y,x), 'bottomright':(y,x)}, ...}.
     Here, the key of the dictionary is the full image file name of the original image.
 
@@ -527,9 +530,11 @@ class Database(bob.db.base.SQLiteDatabase):
     """
     self.assert_validity()
     if self.original_directory is None:
-      raise ValueError("Please specify the 'original_directory' in the constructor of this class to get the annotations.")
+      raise ValueError(
+          "Please specify the 'original_directory' in the constructor of this class to get the annotations.")
 
-    annotation_file = os.path.join(self.original_directory, directory.client.name + self.annotation_extension)
+    annotation_file = os.path.join(
+        self.original_directory, directory.client.name + self.annotation_extension)
 
     annots = {}
 
@@ -541,18 +546,19 @@ class Database(bob.db.base.SQLiteDatabase):
         if shot_id == directory.shot_id:
           if image_names is None or index in image_names:
             # coordinates are: center x, center y, width, height
-            (center_y, center_x, d_y, d_x) = (float(splits[3]), float(splits[2]), float(splits[5])/2., float(splits[4])/2.)
+            (center_y, center_x, d_y, d_x) = (float(splits[3]), float(
+                splits[2]), float(splits[5]) / 2., float(splits[4]) / 2.)
             # extract the bounding box information
             annots[index] = {
-                'topleft' : (center_y - d_y, center_x - d_x),
-                'bottomright' : (center_y + d_y, center_x + d_x)
+                'topleft': (center_y - d_y, center_x - d_x),
+                'bottomright': (center_y + d_y, center_x + d_x)
             }
 
-    # return the annotations as returned by the call function of the Annotation object
+    # return the annotations as returned by the call function of the
+    # Annotation object
     return annots
 
-
-  def original_file_name(self, directory, check_existence = None):
+  def original_file_name(self, directory, check_existence=None):
     """Returns the list of original image names for the given ``directory``, sorted by frame number.
     In opposition to other bob databases, here a **list** of file names is returned.
 
@@ -569,19 +575,19 @@ class Database(bob.db.base.SQLiteDatabase):
     #file_name_filter = bob.db.base.Database.original_file_name(self, directory, check_existence = False)
     # check if directory is set
     if not self.original_directory or not self.original_extension:
-      raise ValueError("The original_directory and/or the original_extension were not specified in the constructor.")
+      raise ValueError(
+          "The original_directory and/or the original_extension were not specified in the constructor.")
     # extract file name
-    file_name_list = directory.make_path(self.original_directory, self.original_extension)
+    file_name_list = directory.make_path(
+        self.original_directory, self.original_extension)
     if not check_existence or os.path.exists(file_name):
       return file_name_list
-    
 
     # list the data
     import glob
     file_name_list = glob.glob(file_name_filter)
     if check_existence and not file_name_list:
-      raise ValueError("No image was found in directory '%s'. Please check the original directory '%s'." % (file_name_filter, self.original_directory))
+      raise ValueError("No image was found in directory '%s'. Please check the original directory '%s'." % (
+          file_name_filter, self.original_directory))
     # get the file names sorted by id
-    return sorted(file_name_list, key = lambda x: int(x.split('.')[-2]))
-
-
+    return sorted(file_name_list, key=lambda x: int(x.split('.')[-2]))
