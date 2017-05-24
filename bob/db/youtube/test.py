@@ -1,20 +1,5 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# Laurent El Shafey <laurent.el-shafey@idiap.ch>
-#
-# Copyright (C) 2011-2012 Idiap Research Institute, Martigny, Switzerland
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3 of the License.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """A few checks at the YouTube database.
 """
@@ -221,18 +206,19 @@ def test_annotations():
   # get all files
   dirs = random.sample(list(db.objects()), 100) # if the random sampling fails, please remove it to get all files checked.
   # iterate over all files
-  for dir in dirs:
+  for k in dirs:
     # get the files
     import glob
-    images = db.original_file_name(dir)
+    images = glob.glob(db.original_file_name(k))
     # get the annotations for 10 images
-    annotations = db.annotations(dir)
+    annotations = db.annotations(k)
     # check that images and annotations are from the same image ID
-    assert len(images) == len(annotations)
+    assert len(images) == len(annotations), '%r != %r at directory %s' % \
+        (len(images), len(annotations), k)
 
     # check a subset of the annotations
     image_names = sorted(set([os.path.basename(images[random.randrange(len(images))]) for i in range(10)]))
-    annotations = db.annotations(dir, image_names = image_names)
+    annotations = db.annotations(k, image_names = image_names)
     assert len(annotations) <= 10
     for i, image_id in enumerate(sorted(annotations.keys())):
       assert image_id == image_names[i]
