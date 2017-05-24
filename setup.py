@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# author: Manuel Guenther <manuel.guenther@idiap.ch>
-# date:   Wed Feb 13 12:35:29 CET 2013
 
 from setuptools import setup, find_packages, dist
 dist.Distribution(dict(setup_requires=['bob.extension']))
