@@ -10,7 +10,7 @@
   YOUR_DATABASE_DIRECTORY = '/idiap/resource/database/YouTubeFaces/frame_images_DB'
 
 ==============
- User's Guide	
+ User's Guide
 ==============
 
 This package contains the access API and descriptions for the `YouTube Faces`_ database.
@@ -69,7 +69,7 @@ The Directory Objects
 
 The most important method of the interface is the :py:func:`bob.db.youtube.Database.objects` function.
 You can use this function to query the *information* for the protocols.
-For the YouTube database, the information consists of a list of :py:class:`bob.db.youtube.models.Directory`.
+For the YouTube database, the information consists of a list of :py:class:`bob.db.youtube.Directory`.
 Each ``Directory`` contains information about a video, such as the identity of the client, the shot id and the (relative) path of the directory in the database:
 
 .. .. doctest::
