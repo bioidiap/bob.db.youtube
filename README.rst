@@ -2,9 +2,9 @@
 .. Thu 18 Aug 15:25:19 CEST 2016
 
 .. image:: http://img.shields.io/badge/docs-stable-yellow.svg
-   :target: http://pythonhosted.org/bob.db.youtube/index.html
+   :target: https://www.idiap.ch/software/bob/docs/bob/bob.db.youtube/stable/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.svg
-   :target: https://www.idiap.ch/software/bob/docs/latest/bob/bob.db.youtube/master/index.html
+   :target: https://www.idiap.ch/software/bob/docs/bob/bob.db.youtube/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.db.youtube/badges/master/build.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.youtube/commits/master
 .. image:: https://gitlab.idiap.ch/bob/bob.db.youtube/badges/master/coverage.svg
@@ -12,8 +12,6 @@
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.youtube
 .. image:: http://img.shields.io/pypi/v/bob.db.youtube.svg
-   :target: https://pypi.python.org/pypi/bob.db.youtube
-.. image:: http://img.shields.io/pypi/dm/bob.db.youtube.svg
    :target: https://pypi.python.org/pypi/bob.db.youtube
 .. image:: https://img.shields.io/badge/original-data--files-a000a0.png
    :target: http://www.cs.tau.ac.il/~wolf/ytfaces
@@ -32,7 +30,7 @@ This package does not contain the original `YouTube Faces`_ data files, which ne
 Installation
 ------------
 
-Complete Bob's `installation`_ instructions. Then, to install this pacakge,
+Complete Bob's `installation`_ instructions. Then, to install this package,
 run::
 
   $ conda install bob.db.youtube
