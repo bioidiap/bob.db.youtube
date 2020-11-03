@@ -7,7 +7,6 @@
 import os
 import bob.db.base
 import bob.io.base
-import bob.io.matlab
 import pkg_resources
 
 from .models import *
@@ -20,7 +19,7 @@ def add_directories(session, verbose):
   # read the video_names file and the video_labels
   if verbose: print("Adding clients and files ...")
   with open(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_names.txt')) as names:     # the video_names field -- exported to text file
-    labels = bob.io.base.load(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_labels.mat')) # the video_labels field -- exported to a single Matlab file
+    labels = bob.io.base.load(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_labels.mat.hdf5')) # the video_labels field -- exported to a single Matlab file
     # iterate over the video names
     for index, line in enumerate(names):
       assert len(line) > 0
@@ -44,7 +43,7 @@ def add_pairs(session, verbose):
 
   # read the splits filename
   if verbose: print("Adding pairs ...")
-  splits = bob.io.base.load(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_splits.mat')) # the Splits field -- exported to a single Matlab file
+  splits = bob.io.base.load(pkg_resources.resource_filename('bob.db.youtube', 'protocol/Youtube_splits.mat.hdf5')) # the Splits field -- exported to a single Matlab file
   session.flush()
 
   for fold in range(splits.shape[2]):
